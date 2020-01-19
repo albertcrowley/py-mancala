@@ -46,28 +46,39 @@ class Board:
             self.board = [0, 4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4]
             self.reversed = False
 
-    def make_player_move(self, n):
+    def make_player_move(self, n, player_num):
+
+        if player_num == 1:
+            player_view = self.board
+        else:
+            player_view = self.board[7:] + self.board[:7]
+
         assert n < 6
         n += 1
-        tokens = self.board[n]
+        tokens = player_view[n]
         assert tokens > 0
-        self.board[n] = 0
+        player_view[n] = 0
         while tokens:
             tokens -= 1
             n += 1
-            if n >= len(self.board):
+            if n >= len(player_view):
                 n = 1
-            self.board[n] += 1
+            player_view[n] += 1
 
         if n == self.PLAYER_SCORE_HOLDER:
             return True
 
-        if self.board[n] == 1 and 0 < n < 7:
-            oponent_pos = len(self.board) - n
-            if DONT_SCORE_ONE is False or (DONT_SCORE_ONE is True and self.board[oponent_pos] != 0):
-                self.board[n] = 0
-                self.board[self.PLAYER_SCORE_HOLDER] += 1 + self.board[oponent_pos]
-                self.board[oponent_pos] = 0
+        if player_view[n] == 1 and 0 < n < 7:
+            oponent_pos = len(player_view) - n
+            if DONT_SCORE_ONE is False or (DONT_SCORE_ONE is True and player_view[oponent_pos] != 0):
+                player_view[n] = 0
+                player_view[self.PLAYER_SCORE_HOLDER] += 1 + player_view[oponent_pos]
+                player_view[oponent_pos] = 0
+
+        if player_num == 1:
+            self.board = player_view
+        else:
+            self.board = player_view[7:] + player_view[:7]
 
         return False
 
@@ -173,6 +184,8 @@ class Board:
         print(*["%2d" % x for x in self.board[1:7]], sep="|", file=result)
         return result.getvalue()
 
+    def getState(self):
+        return self.board
 
     def get_heurestic_score(self):
         if not self.reversed:
