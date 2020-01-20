@@ -1,16 +1,26 @@
 from mancala import Board
 from brain import Brain
 from evolver import Evolver
+from math import floor
 
 if __name__ == '__main__':
 
+    pool_size = 128
+    iterations = 25
 
-
-    brain1 = Brain()
-    brain2 = Brain()
+    brains = []
 
     evolver = Evolver()
-    evolver.compete(brain1, brain2)
+
+    for loop in range(iterations):
+        while len(brains) < pool_size:
+            brains.append( Brain() )
+
+        brains = evolver.find_top_brains(brains)
+
+        print ("***********************\n  Iteration {} winners\n***********************")
+        for b in brains:
+            print (b)
 
     # while True:
     #     (move, confidence) = brain1.predict()
