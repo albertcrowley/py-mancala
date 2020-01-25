@@ -2,56 +2,73 @@ from mancala import Board
 from brain import Brain
 from evolver import Evolver
 from math import floor
+from random import shuffle, sample, random
+import os
+import numpy as np
+from matplotlib import pyplot as plt
+
+
+handle = None
+def plot(stats_per_iteration):
+    if not os.path.exists('./figures'):
+        os.mkdir('./figures')
+
+    plt.axis([0, len(stats_per_iteration) + 10, 0, 20])
+    plt.ion()
+    x = [ s['avg rounds per game'] for s in stats_per_iteration  ]
+    x2 = [ s['avg score'] for s in stats_per_iteration   ]
+    plt.plot(x, 'g^', x2, 'r--')
+
+    file_name = "./figures/improvement-{}.png".format( len(stats_per_iteration ) )
+    if os.path.exists(file_name):
+        os.unlink(file_name)
+
+    plt.savefig(file_name)
+
 
 if __name__ == '__main__':
 
     pool_size = 128
-    iterations = 25
+    iterations = 1280
+    new_brain_percent = .1
 
     brains = []
+    iter = 0
+    stats_per_iteration = []
 
     evolver = Evolver()
 
+    while len(brains) < pool_size:
+        brains.append( Brain() )
+
     for loop in range(iterations):
-        while len(brains) < pool_size:
-            brains.append( Brain() )
+        plot(stats_per_iteration)
+        iter += 1
+        mutants = []
+        while ( len(brains) + len(mutants) ) < pool_size:
+            if random() < new_brain_percent:
+                mutants.append(Brain())
+            else:
+                parent_brain = sample(brains, 1)[0]
+                mutant = parent_brain.getNewMutant(mutation_chance=.2, max_mutation=.5)
+                mutants.append( mutant )
+        brains = brains + mutants
+        shuffle(brains) # mix them up so winners don't always play winners first
+
 
         brains = evolver.find_top_brains(brains)
 
-        print ("***********************\n  Iteration {} winners\n***********************")
-        for b in brains:
-            print (b)
+        # print ("***********************\n  Iteration {} winners\n***********************".format(iter))
+        # for b in brains:
+        #     print (b)
 
-    # while True:
-    #     (move, confidence) = brain1.predict()
-    #     print("\n\nP1 move is {} with {}".format(move, confidence))
-    #     has_move = board.make_player_move(move,1)
-    #     board.print()
-    #
-    #     (move, confidence) = brain2.predict()
-    #     print("\n\nP2 move is {} with {}".format(move, confidence))
-    #     has_move = board.make_player_move(move,2)
-    #     board.print()
-    #
-
-    # try:
-    #     board.print()
-    #     while True:
-    #         (move, confidence) = brain1.predict()
-    #         has_move = board.make_player_move(move)
-    #         board.print()
-    # except Exception as e:
-    #     print (e)
-    #     print('Wrong move: ', move)
+        print ("\n Iteration {} Stats\n***********************".format(iter))
+        stats = evolver.getStats()
+        stats_per_iteration.append(stats)
+        for key in stats:
+            print ("{} {}".format(key, stats[key]))
 
 
-    # while False:
-    #     move = brain1.predict()
-    #     for best_move in board.find_best_move(5):
-    #         print(best_move)
-    #     board = player_move(board)
-    #     board = opponent_move(board)
-    #
-    #     if board.no_more_moves():
-    #         print("Games ended")
-    #         break
+
+
+
